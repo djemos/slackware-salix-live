@@ -1,12 +1,12 @@
 # vim: set syn=sh:
 if [ -z "$DISTRO" ]; then
   DISTRO=salix
-  VER=kde-14.1-64
+  VER=openbox-14.1-64
   # empty for a final release for example
   #RLZ=$(date -Iminutes)
   RLZ=
   # background image filename
-  #BGIMAGE_NAME=slackel.xcf
+  #BGIMAGE_NAME=salix.xcf
   #THEME=Tentacles
   # don't change this unless you sure that the newer version works the same
   FUFSVER=0.4.2
@@ -22,7 +22,7 @@ if [ -z "$DISTRO" ]; then
   export VER
   export RLZ
   export BGIMAGE_NAME
-  export THEME
+  #export THEME
   export FUFSVER
   export FUFSURL
   export ISO_NAME

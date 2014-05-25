@@ -253,3 +253,5 @@ xfsprogs
 xz
 zlib
 zoo
+freetype
+libpng

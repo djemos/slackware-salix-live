@@ -1,7 +1,7 @@
 # vim: set syn=sh:
 if [ -z "$DISTRO" ]; then
   DISTRO=salix
-  VER=kde-14.1-32
+  VER=openbox-14.1-32
   # empty for a final release for example
   #RLZ=$(date -Iminutes)
   #RLZ=
@@ -22,7 +22,7 @@ if [ -z "$DISTRO" ]; then
   export VER
   export RLZ
   export BGIMAGE_NAME
-  export THEME
+  #export THEME
   export FUFSVER
   export FUFSURL
   export ISO_NAME
