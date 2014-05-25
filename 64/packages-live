@@ -9,7 +9,6 @@ gparted
 gtkmm
 isomaster
 libdaemon
-libsigc++
 liveenv
 pangomm
 remmina
