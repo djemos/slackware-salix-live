@@ -17,7 +17,6 @@ cairomm
 cifs-utils
 clearlooks-phenix
 compositeproto
-conky
 corbeille-spacefm-en
 cups
 damageproto
@@ -27,7 +26,6 @@ dmxproto
 dri2proto
 enchant
 encodings
-epdfview
 esound
 evieext
 fbpanel
