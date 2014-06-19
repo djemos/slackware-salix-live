@@ -68,8 +68,6 @@ glproto
 glu
 gmime
 gmrun
-gnome-colors-icon-theme
-gnome-icon-theme
 gnome-themes-standard
 gnsu
 gsettings-desktop-schemas
@@ -343,7 +341,6 @@ xset
 xsetroot
 xsm
 xstdcmap
-xterm
 xtrans
 xvidtune
 xvinfo
