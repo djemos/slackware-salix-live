@@ -23,7 +23,7 @@ for KDE live
 git clone https://github.com/djemos/slackware-salix-live.git salix-live
 
 cd salix-live
-sh .getsalt-scripts.sh master
+sh prepare-sources.sh master
 
 cd 64
 or
