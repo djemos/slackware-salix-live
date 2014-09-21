@@ -3,12 +3,10 @@ hostname
 ssh
 alias
 avahi
-kdm
-user-settings-kde
-dmrc-kde
+gdm
+user-settings-xfce
+dmrc-xfce
 xscreensaver-disable
-firefox-profile
-firefox-default
 salixlive-logo
 sli
-onlykde-desktop
+nokde-desktop
