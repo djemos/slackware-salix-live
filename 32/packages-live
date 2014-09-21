@@ -3,10 +3,13 @@ avahi
 cairomm
 freerdp
 glibmm
+gmountman
 gparted
 gtkmm
 isomaster
 libdaemon
+libssh
+libsigc++
 pangomm
 remmina
 slackware-live
