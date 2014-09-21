@@ -5,7 +5,7 @@ create a salix live iso
 
 Configuration files for Salix Live.
 
-The master branch is also the kde branch.
+The master branch is also the xfce branch.
 
 To build the live iso
 Open a terminal and type
