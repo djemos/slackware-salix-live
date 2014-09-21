@@ -19,7 +19,7 @@ Of cource you can download sli from this repo, build it and copy it to local fol
 
 You will also need to install unionfs-fuse from this repo https://github.com/djemos/unionfs-fuse.git 
 
-for KDE live 
+for xfce live 
 git clone https://github.com/djemos/slackware-salix-live.git salix-live
 
 cd salix-live
@@ -30,7 +30,7 @@ or
 cd 32
 
 to build a 64 or 32 bit iso.
-You have to be on an 32 or 64 bit slackel system, to build the 32 or 64 bit iso.
+You have to be on an 32 or 64 bit salix system, to build the 32 or 64 bit iso.
 
 sudo getpkgs.sh 32 |64 version e.g. 64 14.1 
 or
