@@ -1,7 +1,5 @@
 avahi
 cairomm
-efibootmgr
-elilo
 freerdp
 glibmm
 gparted
@@ -9,10 +7,10 @@ gtkmm
 isomaster
 libdaemon
 libsigc++
-liveenv
 pangomm
 remmina
 slackware-live
 sli
 squashfs-tools
 syslinux
+liveenv
