@@ -1,13 +1,16 @@
+atkmm
 avahi
 cairomm
 efibootmgr
 elilo
 freerdp
 glibmm
+gmountman
 gparted
 gtkmm
 isomaster
 libdaemon
+libssh
 libsigc++
 pangomm
 remmina
