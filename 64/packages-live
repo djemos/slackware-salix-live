@@ -8,6 +8,7 @@ gparted
 gtkmm
 isomaster
 libdaemon
+libssh
 libsigc++
 liveenv
 pangomm
