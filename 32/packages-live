@@ -9,11 +9,12 @@ gparted
 gtkmm
 isomaster
 libdaemon
+libssh
 libsigc++
-liveenv
 pangomm
 remmina
 slackware-live
 sli
 squashfs-tools
 syslinux
+liveenv
