@@ -9,10 +9,10 @@ gtkmm
 isomaster
 libdaemon
 libsigc++
-liveenv
 pangomm
 remmina
 slackware-live
 sli
 squashfs-tools
 syslinux
+liveenv
