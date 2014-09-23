@@ -36,6 +36,7 @@ gtk-xfce-engine
 gtkman
 gtkspell
 gutenprint
+gvfs
 hplip
 icedtea-web
 ilmbase
@@ -49,6 +50,7 @@ lcms2
 libXevie
 libaio
 libass
+libbluray
 libburn
 libcaca
 libcanberra
@@ -67,6 +69,7 @@ libical
 libid3tag
 libisofs
 libmms
+libmtp
 libplist
 libreoffice
 libreplaygain
