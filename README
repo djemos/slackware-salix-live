@@ -23,7 +23,8 @@ for xfce live
 git clone https://github.com/djemos/slackware-salix-live.git salix-live
 
 cd salix-live
-sh prepare-sources.sh master
+sh prepare-sources.sh xfce 
+for other editions replace xfce with openbox, fluxbox, kde etc
 
 cd 64
 or
