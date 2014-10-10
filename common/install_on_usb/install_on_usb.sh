@@ -69,6 +69,9 @@ then
 	iso_arch="${isoname##*/}"
 	iso_arch="${iso_arch##*live}"
 	iso_arch="${iso_arch%%-*}"
+	if [ "$iso_arch" != "64" ]; then
+		iso_arch=32
+	fi
 else
 	echo "'Sorry, $isoname iso file does not exist"
 	exit
@@ -82,6 +85,9 @@ if [ -f "$isoname" ]; then
 	iso_archf="${isoname##*/}"
 	iso_archf="${iso_archf##*live}"
 	iso_archf="${iso_archf%%-*}"
+	if [ "$iso_archf" != "64" ]; then
+		iso_archf=32
+	fi
 else
 	echo "Sorry, $isoname iso file does not exist"
 	exit
