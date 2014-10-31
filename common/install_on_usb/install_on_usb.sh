@@ -14,16 +14,20 @@ version() {
   echo "Licence: $LICENCE"
 }
 usage() {
-  echo 'install-on-USB.sh [-h/--help] [-v/--version]'
+  echo 'install_on_usb.sh [-h/--help] [-v/--version]'
   echo ' -h, --help: this usage message'
   echo ' -v, --version: the version author and licence'
   echo ''
-  echo "`basename $0` --usb isoname 32|64"
-  echo "`basename $0` --persistent 32|64"
+  echo "`basename $0` --usb isoname device"
+  echo "`basename $0` --persistent 32|64 device"
   echo ''
-  echo '-> Install syslinux on an USB key using an ISO and the USB key itself.'
-  echo '-> Create a persistent ext3 file at installation (optional).'
-  echo '-> Create a persistent ext3 file after installation.'
+  echo '-> --usb option installs syslinux on a USB key using an ISO (specify path to image and device)'
+  echo '-> The script will ask user to confirm the device specified'
+  echo '-> It will also optionally create a persistent ext3 file.'
+  echo ''
+  echo '-> --persistent option creates a persistent ext3 file after installation, if user did not do so then'
+  echo '-> specify architecture and device'
+  echo '-> No need to specify path to iso because Salix Live is already installed'
   exit 1
 }
 
@@ -80,43 +84,75 @@ fi
 
 function check_if_file_iso_exists(){
 isoname=$1
-iso_arch=$2
 if [ -f "$isoname" ]; then
-	iso_archf="${isoname##*/}"
-	iso_archf="${iso_archf##*live}"
-	iso_archf="${iso_archf%%-*}"
-	if [ "$iso_archf" != "64" ]; then
-		iso_archf=32
+	isonamef="${isoname%%-*}"
+	isonamef="${isonamef##*/}"
+
+	if [ "$isonamef" == "salixlive64" ]; then
+		iso_arch=64
+	elif [ "$isonamef" == "salixlive" ]; then
+		iso_arch=32
+	else
+		echo "You provide the wrong iso image"
+		exit
 	fi
 else
-	echo "Sorry, $isoname iso file does not exist"
-	exit
-fi
-
-if [ "$iso_arch" != "$iso_archf" ]; then
-	echo "Sorry, $isoname arch is $iso_archf while parameter is $iso_arch"
 	echo "You provide the wrong iso image"
-    exit
-fi    
+    exit	
+fi	
 }
 
-function find_usb(){
-disks=`cat /proc/partitions | sed 's/  */:/g' | cut -f5 -d: | sed -e /^$/d -e /[1-9]/d -e /^sr0/d -e /loop/d -e /$bootdevice/d`
-installmedia=""
-for disk in $disks; do
- if [ "$disk" != "sda" ]; then
-	installmedia=/dev/$disk
+function check_device(){
+installmedia=$1
+msgdev=$1
+#Be sure do not format hard disk
+disk=`echo $installmedia | cut -c6-8`  
+ if [ "$disk" == "sda" ] || [ "$disk" == "hda" ]; then
+	echo "You cannot install to /dev/$disk hard disk drive"
+	exit
  fi
-done
+ 
+ # check if usb device pluged in
+ disks=`cat /proc/partitions | sed 's/  */:/g' | cut -f5 -d: | sed -e /^$/d -e /[1-9]/d -e /^sr0/d -e /loop/d -e /^sda/d`
+ disk=`echo $installmedia | cut -c6-8` 
+ 
+ installmedia="" ## clear the variable
+	for usb in $disks; do
+		if [ "$usb" == "$disk" ]; then
+			installmedia="/dev/$usb"
+		fi	
+		done
+if [ "$installmedia" == "" ] || [ "$installmedia" == NULL ]; then
+	echo "There is no removable usb device $msgdev attached to your system"
+	exit
+else
 echo "========================================="
 echo "										   "
 echo "Removable device is $installmedia        "
 echo "										   "
 echo "========================================="
+fi
+}
 
-if [ "$installmedia" == NULL ]; then
+function find_usb(){
+disks=`cat /proc/partitions | sed 's/  */:/g' | cut -f5 -d: | sed -e /^$/d -e /[1-9]/d -e /^sr0/d -e /loop/d`
+#disks=`cat /proc/partitions | sed 's/  */:/g' | cut -f5 -d: | sed -e /^$/d -e /[1-9]/d -e /^sr0/d -e /loop/d -e /^sda/d`
+installmedia=""
+for disk in $disks; do
+ if [ "$disk" != "sda" ]; then
+	installmedia=/dev/$disk
+ else installemedia=""	
+ fi
+done
+if [ "$installmedia" == "" ]; then
 	echo "There is no removable usb device attached to your system"
 	exit
+else
+echo "========================================="
+echo "										   "
+echo "Removable device is $installmedia        "
+echo "										   "
+echo "========================================="
 fi
 }
 
@@ -180,6 +216,7 @@ fi
 }
     
 function create_persistent(){
+CWD=`pwd`
 mkdir -p /mnt/install
 mount $installmedia /mnt/install
 cd /mnt/install/
@@ -194,19 +231,22 @@ if [ $AFTER -gt 0 ]; then
 		echo ""
 		echo "The persistent file $NAME is ready."
 		cd $CWD
+		sleep 5
 		umount /mnt/install
 		rmdir /mnt/install
 	else
 		echo "ERROR: $SCRIPT_NAME was not able to create the persistent file $NAME"
 		cd $CWD
+		sleep 5		
 		umount /mnt/install
-		rmdir /mnt/install	
+		rmdir /mnt/install
 		exit 1
 	fi
 else
   echo "ERROR: There is not enough free space left on your device \
 for creating the persistent file $NAME"
-	cd CWD
+	cd $CWD
+	sleep 5	
 	umount /mnt/install
 	rmdir /mnt/install	
   exit 1
@@ -222,14 +262,15 @@ function install_usb() {
 if [ "$installdevice" == "$installmedia" ]; then #install on whole disk: partition and format media
 		#if [ `uname -m` == "x86_64" ] && [ "$iso_arch" == "64" ]; then #EFI/GPT
 		if [ "$iso_arch" == "64" ]; then #EFI/GPT
-			partitionnumber=2
+			partitionnumber=1
 			installmedia="$installdevice$partitionnumber"
 			dd if=/dev/zero of=$installdevice bs=512 count=34 >/dev/null 2>&1
-			echo -e "2\nn\n\n\n+32M\nef00\nn\n\n\n\n0700\nr\nh\n1 2\nn\n\ny\n\nn\n\nn\nwq\ny\n" | gdisk $installdevice || return $PARTITIONERROR
+			#echo -e "2\nn\n\n\n+32M\nef00\nn\n\n\n\n0700\nr\nh\n1 2\nn\n\ny\n\nn\n\nn\nwq\ny\n" | gdisk $installdevice || return $PARTITIONERROR
+			echo -e "2\nn\n\n\n\n0700\nr\nh\n1 2\nn\n\ny\n\nn\n\nn\nwq\ny\n" | gdisk $installdevice || return $PARTITIONERROR
 			#hybrid MBR with BIOS boot partition (1007K) EFI partition (32M) and live partition
 			#echo -e "2\nn\n\n\n+32M\nef00\nn\n\n\n\n0700\nn\n128\n\n\nef02\nr\nh\n1 2\nn\n\ny\n\nn\nn\nwq\ny\n" | gdisk $installdevice || return $PARTITIONERROR
 			partprobe $installdevice >/dev/null 2>&1; sleep 3
-			mkfs.fat -n "efi"  $installdevice"1" || return $FORMATERROR
+		#	mkfs.fat -n "efi"  $installdevice"1" || return $FORMATERROR
 			#mkfs.ext3 -L "$LIVELABEL" $installmedia || return $FORMATERROR
 			fat32option="-F 32"
 			mkfs.vfat $fat32option -n "$LIVELABEL" $installmedia || return $FORMATERROR
@@ -288,24 +329,24 @@ echo "Copying live system on $installmedia"
 echo ""
 echo ""
 	#if [ `uname -m` == "x86_64" ] && [ "$iso_arch" == "64" ]; then #EFI/GPT
-	if  [ "$iso_arch" == "64" ]; then #EFI/GPT
-		efipartition="$installdevice"`gdisk -l $installdevice 2>/dev/null | grep " EF00 " | sed 's/  */:/g' | cut -f2 -d:`
-		if [ ! -z "$efipartition" ] && [ "$efipartition" != "$installmedia" ]; then
-			mkdir -p /mnt/tmp
-			if mount $efipartition /mnt/tmp >/dev/null 2>&1; then
-				sleep 1
-				umount /mnt/tmp
-			else
-				mount | grep -q "^$installmedia .* vfat "
-				mkfs.fat -n  "efi" $efipartition || return $FORMATERROR
-			fi
-			#mkdir -p /mnt/efi
-			#mount $efipartition /mnt/efi
-			#cp -r $livedirectory/EFI /mnt/efi/
-			#umount /mnt/efi
-			#rmdir /mnt/efi
-		fi
-	fi
+#	if  [ "$iso_arch" == "64" ]; then #EFI/GPT
+#		efipartition="$installdevice"`gdisk -l $installdevice 2>/dev/null | grep " EF00 " | sed 's/  */:/g' | cut -f2 -d:`
+#		if [ ! -z "$efipartition" ] && [ "$efipartition" != "$installmedia" ]; then
+#			mkdir -p /mnt/tmp
+#			if mount $efipartition /mnt/tmp >/dev/null 2>&1; then
+#				sleep 1
+#				umount /mnt/tmp
+#			else
+#				mount | grep -q "^$installmedia .* vfat "
+#				mkfs.fat -n  "efi" $efipartition || return $FORMATERROR
+#			fi
+#			#mkdir -p /mnt/efi
+#			#mount $efipartition /mnt/efi
+#			#cp -r $livedirectory/EFI /mnt/efi/
+#			#umount /mnt/efi
+#			#rmdir /mnt/efi
+#		fi
+#	fi
 	
 	mkdir -p /mnt/install
 	mount $installmedia /mnt/install
@@ -326,11 +367,13 @@ echo ""
 		fi
 		cat /usr/share/syslinux/mbr.bin > $installdevice
 	else
-		umount /mnt/install
+		umount /mnt/install 
 	fi
+	umount /mnt/install 2>/dev/null
+	sleep 2
 	rmdir /mnt/install
-	umount /tmp/iso
-	rmdir /tmp/iso
+	umount $livedirectory
+	rmdir $livedirectory
 	
 	return 0
 }
@@ -339,15 +382,19 @@ action=$1
 case $action in
 "--usb")
     isoname=$2
-    iso_arch=$3
+    installmedia=$3
+    if [ "$installmedia" == "" ] || [ "$installmedia" == NULL ]; then
+    		echo "`basename $0` --usb iso_name device"
+		exit $CMDERROR
+	fi	
     check_root
- if  [ "$iso_arch" == "32" ] || [ "$iso_arch" == "64" ]; then   
-	check_if_file_iso_exists $isoname $iso_arch
-	find_usb
+if  check_if_file_iso_exists $isoname ; then
+	check_device $installmedia
+	#find_usb
 	usb_message
-	mkdir -p /tmp/iso
-	mount -o loop $isoname /tmp/iso > /dev/null 2>&1
-	livedirectory=/tmp/iso/
+	ISODIR=$(mktemp -d)
+	mount -o loop $isoname $ISODIR > /dev/null 2>&1
+	livedirectory=$ISODIR
     if [ -f "$isoname" ] && [ -b "$installmedia" ]; then
 		livesystemsize=`du -s -m $livedirectory | sed 's/\t.*//'`
 		device=`echo $installmedia | cut -c6-8`
@@ -357,31 +404,32 @@ case $action in
 		let destinationsize=$sectorscount*$sectorsize/1048576
 		if (( $livesystemsize > $destinationsize)); then 
 			echo "error: insufficant space on device '$installmedia'"
-			umount /tmp/iso
-			rm -rf /tmp/iso
+			umount $ISODIR
+			rmdir $ISODIR
 			exit $INSUFFICIENTSPACE
 		else
 			persistent_message
 			install_usb $livedirectory $installmedia
 			if [ "$persistent_file" == "yes" ]; then
 			 create_persistent
-			fi 
+			fi
 			exit $!
 		fi
 	else
-		echo "`basename $0` --usb iso_name 32|64"
+		umount $ISODIR
+		rmdir $ISODIR
+		echo "`basename $0` --usb iso_name device"
 		exit $CMDERROR
 	fi
-else
-	echo "`basename $0` --usb iso_name 32|64"
-		exit $CMDERROR
 fi		
 ;;
 	
 "--persistent")
 	iso_arch=$2
+	installmedia=$3
+	check_device $installmedia
 if  [ "$iso_arch" == "32" ] || [ "$iso_arch" == "64" ]; then
-	find_usb
+	#find_usb
 	device=`echo $installmedia | cut -c6-8`
 	sectorscount=`cat /sys/block/$device/size`
 	sectorsize=`cat /sys/block/$device/queue/hw_sector_size`
@@ -389,20 +437,20 @@ if  [ "$iso_arch" == "32" ] || [ "$iso_arch" == "64" ]; then
 	installdevice="/dev/$device"
 	#if [ `uname -m` == "x86_64" ] && [ "$iso_arch" == "64" ]; then #EFI/GPT
 	if [ "$iso_arch" == "64" ]; then #EFI/GPT
-			partitionnumber=2
+			partitionnumber=1
 			installmedia="$installdevice$partitionnumber"
 	else #BIOS/MBR
 			partitionnumber=4
 			installmedia="$installdevice$partitionnumber"
 	fi		
-         echo $installmedia
+        echo $installmedia
 		persistent_message
 		if [ "$persistent_file" == "yes" ]; then
 			 create_persistent
 		fi 
 			exit $!
 else
-		echo "`basename $0` --persistent 32|64"
+		echo "`basename $0` --persistent 32|64 device"
 		exit $CMDERROR
 fi
 ;;
@@ -415,8 +463,8 @@ usage
 exit 0
 ;;	
 	
-*)	echo "`basename $0` --persistent 32|64"
-	echo "`basename $0` --usb isoname 32|64"
+*)	echo "`basename $0` --persistent 32|64 device"
+	echo "`basename $0` --usb isoname device"
 	exit $CMDERROR
 	;;
 esac

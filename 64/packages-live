@@ -1,9 +1,7 @@
 atkmm
-avahi
 cairomm
 efibootmgr
 elilo
-freerdp
 glibmm
 gmountman
 gparted
@@ -13,7 +11,6 @@ libdaemon
 libssh
 libsigc++
 pangomm
-remmina
 slackware-live
 sli
 squashfs-tools
