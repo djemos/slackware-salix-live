@@ -59,4 +59,3 @@ will output the following help message:
   -> specify architecture and device
   -> No need to specify path to iso because Salix Live is already
      installed
-     
