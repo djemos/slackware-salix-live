@@ -20,11 +20,15 @@ Of cource you can download sli from this repo, build it and copy it to local fol
 You will also need to install unionfs-fuse from this repo https://github.com/djemos/unionfs-fuse.git 
 
 for xfce live 
-git clone https://github.com/djemos/slackware-salix-live.git salix-live
+git clone https://github.com/djemos/slackware-salix-live.git salix-live-xfce
 
-cd salix-live
+for mate live 
+git clone https://github.com/djemos/slackware-salix-live.git -b mate salix-live-mate
+for other editions replace mate with openbox, fluxbox, kde etc
+
+cd salix-live-xfce
 sh prepare-sources.sh xfce 
-for other editions replace xfce with openbox, fluxbox, kde etc
+for other editions replace xfce with openbox, fluxbox, kde, mate etc
 
 cd 64
 or
