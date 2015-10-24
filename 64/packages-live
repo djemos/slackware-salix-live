@@ -1,16 +1,10 @@
-atkmm
-cairomm
 efibootmgr
 elilo
-glibmm
-gmountman
+grub
 gparted
-gtkmm
 isomaster
 libdaemon
 libssh
-libsigc++
-pangomm
 slackware-live
 sli
 squashfs-tools

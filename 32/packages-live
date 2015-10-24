@@ -1,14 +1,8 @@
-atkmm
-cairomm
-glibmm
-gmountman
 gparted
-gtkmm
+grub
 isomaster
 libdaemon
 libssh
-libsigc++
-pangomm
 slackware-live
 sli
 squashfs-tools

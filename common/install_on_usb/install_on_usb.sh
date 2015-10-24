@@ -9,7 +9,7 @@ SCRIPT=$(readlink -f "$SCRIPT")
 VER=1.0
 
 version() {
-  echo "Salix USB installer and persistent creator for 32 and EFI/UEFI 64 v$VER"
+  echo "Slackel USB installer and persistent creator for 32 and EFI/UEFI 64 v$VER"
   echo " by $AUTHOR"
   echo "Licence: $LICENCE"
 }
@@ -27,7 +27,7 @@ usage() {
   echo ''
   echo '-> --persistent option creates a persistent ext3 file after installation, if user did not do so then'
   echo '-> specify architecture and device'
-  echo '-> No need to specify path to iso because Salix Live is already installed'
+  echo '-> No need to specify path to iso because Slackel Live is already installed'
   exit 1
 }
 
@@ -65,6 +65,20 @@ if [ `id -u` != "0" ]; then
 fi
 }
 
+
+function create_link_for_other_distros(){
+# if we run the script from other distro's e.g. ubuntu 
+# which have mbr.bin installed in /usr/lib/syslinux/ 
+# we need a symbolic to /usr/share/syslinux
+if [ ! -f /etc/slackware-version ]; then
+	if [ -f /usr/lib/syslinux/mbr.bin ]; then
+	 if [ ! -f /usr/share/syslinux/mbr.bin ]; then
+		sudo ln --symbolic /usr/lib/syslinux/mbr.bin  /usr/share/syslinux/mbr.bin
+	 fi
+	fi 
+fi
+}	
+
 function find_iso(){
 isoname=$1
 if [ -f "$isoname" ]
@@ -88,9 +102,9 @@ if [ -f "$isoname" ]; then
 	isonamef="${isoname##*/}"
 	isonamef="${isonamef%%-*}"
 
-	if [ "$isonamef" == "salixlive64" ]; then
+	if [ "$isonamef" == "slackellive64" ]; then
 		iso_arch=64
-	elif [ "$isonamef" == "salixlive" ]; then
+	elif [ "$isonamef" == "slackellive" ]; then
 		iso_arch=32
 	else
 		echo "You provide the wrong iso image"
@@ -131,6 +145,8 @@ echo "										   "
 echo "Removable device is $installmedia        "
 echo "										   "
 echo "========================================="
+$mount_point= `blkid $installmedia | grep /dev/sdb | cut -d : -f 1 `
+umount $mount_point
 fi
 }
 
@@ -392,6 +408,7 @@ if  check_if_file_iso_exists $isoname ; then
 	check_device $installmedia
 	#find_usb
 	usb_message
+	create_link_for_other_distros
 	ISODIR=$(mktemp -d)
 	mount -o loop $isoname $ISODIR > /dev/null 2>&1
 	livedirectory=$ISODIR
@@ -409,7 +426,7 @@ if  check_if_file_iso_exists $isoname ; then
 			exit $INSUFFICIENTSPACE
 		else
 			persistent_message
-			install_usb $livedirectory $installmedia
+			#install_usb $livedirectory $installmedia
 			if [ "$persistent_file" == "yes" ]; then
 			 create_persistent
 			fi
@@ -421,6 +438,14 @@ if  check_if_file_iso_exists $isoname ; then
 		echo "`basename $0` --usb iso_name device"
 		exit $CMDERROR
 	fi
+		cd ~/
+		if  mount | grep "on /tmp/iso type" > /dev/null 2>&1; then
+			sleep 1
+			umount /tmp/iso
+			rmdir /tmp/iso
+		fi
+		umount  /tmp/tmp.*
+		rmdir /tmp/tmp.*
 fi		
 ;;
 	

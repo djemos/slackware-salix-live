@@ -13,6 +13,9 @@ and execute the script from there:
   cd /tmp/iso/boot
   sudo sh install_on_usb.sh --usb path_to_iso_image device
 
+Note: If this script is executed from a different distro then be sure gdisk is installed and also maybe have to type
+		sudo bash install_on_usb.sh --usb path_to_iso_image device
+
 device can be something like /dev/sdb or /dev/sdc according to how
 many usb keys are plugged in your system.
 There is no chance to install to your hard disk /dev/sda or /dev/hda.
@@ -24,7 +27,7 @@ optionally create a persistent ext3 file.
 
 If the user did not do so on first installation, then he can create a
 persistent file using the --persistent option. There is now no need to
-specify the path to the iso because Salix Live is already installed to
+specify the path to the iso because Slackel Live is already installed to
 the usb key. However, you do need to specify the architecture, because
 this affects the location of the persistent file:
 
@@ -57,5 +60,5 @@ will output the following help message:
   -> --persistent option creates a persistent ext3 file after
      installation, if user did not do so then
   -> specify architecture and device
-  -> No need to specify path to iso because Salix Live is already
+  -> No need to specify path to iso because Slackel Live is already
      installed
