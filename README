@@ -22,6 +22,10 @@ You will also need to install unionfs-fuse from this repo https://github.com/dje
 for xfce live 
 git clone https://github.com/djemos/slackware-salix-live.git salix-live
 
+for kde live 
+git clone https://github.com/djemos/slackware-salix-live.git -b kde salix-live-kde
+for other editions replace kde with openbox, fluxbox, mate etc
+
 cd salix-live
 sh prepare-sources.sh master
 
