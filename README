@@ -22,9 +22,13 @@ You will also need to install unionfs-fuse from this repo https://github.com/dje
 for xfce live 
 git clone https://github.com/djemos/slackware-salix-live.git salix-live
 
+for mate live 
+git clone https://github.com/djemos/slackware-salix-live.git -b mate salix-live-mate
+for other editions replace mate with openbox, fluxbox, kde etc
+
 cd salix-live
 sh prepare-sources.sh xfce 
-for other editions replace xfce with openbox, fluxbox, kde etc
+for other editions replace xfce with openbox, fluxbox, kde, mate etc
 
 cd 64
 or
