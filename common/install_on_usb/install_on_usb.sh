@@ -9,7 +9,7 @@ SCRIPT=$(readlink -f "$SCRIPT")
 VER=1.0
 
 version() {
-  echo "Slackel USB installer and persistent creator for 32 and EFI/UEFI 64 v$VER"
+  echo "Salix USB installer and persistent creator for 32 and EFI/UEFI 64 v$VER"
   echo " by $AUTHOR"
   echo "Licence: $LICENCE"
 }
@@ -27,7 +27,7 @@ usage() {
   echo ''
   echo '-> --persistent option creates a persistent ext3 file after installation, if user did not do so then'
   echo '-> specify architecture and device'
-  echo '-> No need to specify path to iso because Slackel Live is already installed'
+  echo '-> No need to specify path to iso because Salix Live is already installed'
   exit 1
 }
 
@@ -102,9 +102,9 @@ if [ -f "$isoname" ]; then
 	isonamef="${isoname##*/}"
 	isonamef="${isonamef%%-*}"
 
-	if [ "$isonamef" == "slackellive64" ]; then
+	if [ "$isonamef" == "salixlive64" ]; then
 		iso_arch=64
-	elif [ "$isonamef" == "slackellive" ]; then
+	elif [ "$isonamef" == "salixlive" ]; then
 		iso_arch=32
 	else
 		echo "You provide the wrong iso image"
