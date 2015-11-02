@@ -145,8 +145,10 @@ echo "										   "
 echo "Removable device is $installmedia        "
 echo "										   "
 echo "========================================="
-$mount_point= `blkid $installmedia | grep /dev/sdb | cut -d : -f 1 `
-umount $mount_point
+flag=*
+for n in $installmedia$flag ; do umount $n > /dev/null 2>&1; done
+#mount_point=`mount | grep $installmedia | cut -d : -f 1 -d " "` 
+#umount $mount_point > /dev/null 2>&1
 fi
 }
 
@@ -405,6 +407,8 @@ case $action in
 	fi	
     check_root
 if  check_if_file_iso_exists $isoname ; then
+	flag=*
+	for n in $installmedia$flag ; do umount $n > /dev/null 2>&1; done
 	check_device $installmedia
 	#find_usb
 	usb_message
@@ -426,7 +430,7 @@ if  check_if_file_iso_exists $isoname ; then
 			exit $INSUFFICIENTSPACE
 		else
 			persistent_message
-			#install_usb $livedirectory $installmedia
+			install_usb $livedirectory $installmedia
 			if [ "$persistent_file" == "yes" ]; then
 			 create_persistent
 			fi
@@ -439,13 +443,9 @@ if  check_if_file_iso_exists $isoname ; then
 		exit $CMDERROR
 	fi
 		cd ~/
-		if  mount | grep "on /tmp/iso type" > /dev/null 2>&1; then
-			sleep 1
-			umount /tmp/iso
-			rmdir /tmp/iso
-		fi
-		umount  /tmp/tmp.*
-		rmdir /tmp/tmp.*
+		sleep 5
+		umount  /tmp/tmp.* > /dev/null 2>&1
+		rm -rf /tmp/tmp.*
 fi		
 ;;
 	
