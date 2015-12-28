@@ -1,8 +1,6 @@
 #!/bin/bash
 # Gettext internationalization
-# Copyright 2014, 2015  Dimitris Tzemos <djemos@slackel.gr> 
-# All rights reserved.
-#
+
 #"BASED ON CODE OF BUILD_SLACKWARE-LIVE.SH FROM linux-nomad"
 AUTHOR='Dimitris Tzemos - djemos@slackel.gr '
 LICENCE='GPL v3+'
