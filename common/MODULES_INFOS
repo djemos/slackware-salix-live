@@ -1,3 +1,4 @@
+module=aaa,packages-aaa
 module=core,packages-core
 module=basic,packages-basic
 module=full,packages-full
