@@ -1,8 +1,10 @@
+avahi
 efibootmgr
 elilo
 gnu-efi
 guefi
 gparted
+grub
 gtkmm2
 isomaster
 libdaemon
