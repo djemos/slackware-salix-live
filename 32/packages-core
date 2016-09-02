@@ -1,3 +1,10 @@
+aaa_base
+aaa_terminfo
+acl
+attr
+coreutils
+etc
+glibc-zoneinfo
 a2ps
 acpid
 apr
