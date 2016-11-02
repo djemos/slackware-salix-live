@@ -24,12 +24,12 @@ There is no chance to install to your hard disk /dev/sda or /dev/hda.
 The script will just exit in such a case.
 
 So, you have to specify the path to the iso image and device. The script
-will ask the user to confirm the device specified and it will also
+will ask the user to confirm the device specified, to choose vfat or ext3 filesystem for formatting the device and it will also
 optionally create a persistent ext3 file.
 
 If the user did not do so on first installation, then he can create a
 persistent file using the --persistent option. There is now no need to
-specify the path to the iso because Slackel Live is already installed to
+specify the path to the iso because Salix Live is already installed to
 the usb key. However, you do need to specify the architecture, because
 this affects the location of the persistent file:
 
@@ -40,6 +40,13 @@ run the following command to create persistence:
 
   sudo sh install_on_usb.sh --persistent 64 /dev/sdc
 
+
+If you choose vfat filesystem then to use persistence features you have to create a persistent file. Persistent directory does not supported in vfat.
+
+If you choose ext3 filesystem then you can either create a persistent file sparse (dynamically grow) or fixed (allocated space).
+Or just boot with persistent option from menus. Then a directory named persistent (default) will be created where you can keep your changes between reboots.
+Attention: Never create the folder by hand (persistence will not work).
+Persistent home directory is also supported but it is not useful since only keep /home/$user changes. You can use this feature by changing the parameter changes=persistent to home=home
 
 Typing:
  
@@ -62,5 +69,6 @@ will output the following help message:
   -> --persistent option creates a persistent ext3 file after
      installation, if user did not do so then
   -> specify architecture and device
-  -> No need to specify path to iso because Slackel Live is already
+  -> No need to specify path to iso because Salix Live is already
      installed
+     
