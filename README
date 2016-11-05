@@ -17,6 +17,8 @@ After installing it copy also the txz package in local folder.
 Download and build from this repo https://github.com/djemos/sli.git the sli installer and put the txz package in local folder.
 Of cource you can download sli from this repo, build it and copy it to local folder.
 
+You will also need to have syslinux installed. If not then just install it from repos with slapt-get -i syslinux
+
 for xfce live 
 git clone https://github.com/djemos/slackware-salix-live.git salix-live-xfce
 
