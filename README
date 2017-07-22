@@ -13,9 +13,12 @@ su
 Download slackware-live from this repo https://github.com/djemos/slackware-live-for-salix.git
 to install slackware-live tool which is used to create the initrd and build the iso
 After installing it copy also the txz package in local folder.
+The SLKBUILD source package and binary can be found on http://people.salixos.org/djemos/salix/slackware-live-salix/0.4.7/
 
 Download and build from this repo https://github.com/djemos/sli.git the sli installer and put the txz package in local folder.
 Of cource you can download sli from this repo, build it and copy it to local folder.
+The SLKBUILD source package and binary can be found on http://people.salixos.org/djemos/salix/sli/1.2.3/
+
 
 You will also need to have syslinux installed. If not then just install it from repos with slapt-get -i syslinux
 
