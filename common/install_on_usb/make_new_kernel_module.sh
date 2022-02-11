@@ -30,7 +30,6 @@ SCRIPT=$(readlink -f "$SCRIPT")
 VER=1.0
 
 if [ -z "$startdir" ]; then
-	cd $(dirname "$0")
 	startdir="$(pwd)"
 	export startdir
 fi
@@ -40,7 +39,9 @@ if [ "$UID" != "0" ]; then
 	exit 1
 fi
 
-moduleslist="squashfs:overlay:loop:xhci-pci:ohci-pci:ehci-pci:xhci-hcd:uhci-hcd:ehci-hcd:usb-storage:hid:usbhid:i2c-hid:hid-generic:hid-cherry:hid-logitech:hid-logitech-dj:hid-logitech-hidpp:hid-lenovo:hid-microsoft:hid_multitouch:ext3:ext4:isofs:nls_cp437:nls_iso8859-1"
+#moduleslist="squashfs:overlay:loop:xhci-pci:ohci-pci:ehci-pci:xhci-hcd:uhci-hcd:ehci-hcd:usb-storage:hid:usbhid:i2c-hid:hid-generic:hid-cherry:hid-logitech:hid-logitech-dj:hid-logitech-hidpp:hid-lenovo:hid-microsoft:hid_multitouch:ext3:ext4:isofs:nls_cp437:nls_iso8859-1"
+moduleslist="squashfs:overlay:loop:xhci-pci:ohci-pci:ehci-pci:xhci-hcd:uhci-hcd:ehci-hcd:mmc-core:mmc-block:sdhci:sdhci-pci:sdhci-acpi:usb-storage:hid:usbhid:i2c-hid:hid-generic:hid-apple:hid-asus:hid-cherry:hid-logitech:hid-logitech-dj:hid-logitech-hidpp:hid-lenovo:hid-microsoft:hid_multitouch:jbd2:mbcache:crc32c-intel:ext3:ext4:isofs:fat:nls_cp437:nls_iso8859-1:msdos:vfat:ntfs"
+#moduleslist="squashfs:overlay:loop:usb-storage:xhci-hcd:xhci-pci:ohci-pci:ehci-pci:uhci-hcd:ehci-hcd:hid:usbhid:i2c-hid:hid_generic:hid-asus:hid-cherry:hid-logitech:hid-logitech-dj:hid-logitech-hidpp:hid-lenovo:hid-microsoft:hid_multitouch:jbd2:mbcache:crc32c-intel:ext3:ext4:isofs:fat:nls_cp437:nls_iso8859-1:msdos:vfat"
 
 usb_path=`df --output=target | grep LIVE`
 
@@ -51,18 +52,29 @@ dialog --title "Be sure for USB mount point" \
 	--yesno "$MSGSTR" 0 0
 retval=$?
 if [ $retval -eq 1 ] || [ $retval -eq 255 ]; then
-	clear
 	exit 0
 fi
-
-# create packages_dir directory and copy all txz files there
-# create list file with the names of packages in packages_dir
-
+clear
 # live where packages will install, modules where modules will created, packages_dir contain packages.txz, list files with packages file names
 packagesdirectory=$startdir/packages_dir
 rootdirectory=$startdir/live
 packageslistfile=$startdir/packages_list
 modules=$startdir/modules
+
+mkdir -p $packagesdirectory $rootdirectory $modules 
+
+if [ `uname -m` == "x86_64" ]; then
+    echo kernel-headers > $packageslistfile
+    echo kernel-huge >> $packageslistfile
+    echo kernel-modules >> $packageslistfile
+else
+    echo kernel-headers > $packageslistfile
+    echo kernel-huge >> $packageslistfile
+    echo kernel-modules >> $packageslistfile  
+    echo kernel-huge-smp >> $packageslistfile
+    echo kernel-modules-smp >> $packageslistfile
+fi
+    
 if ! [ -d $packagesdirectory ]; then
 	echo "You have to create a 'packages_dir' directory with packages txz"
 	exit
@@ -73,7 +85,19 @@ if ! [ -f $packageslistfile ]; then
 	exit
 fi
 
-mkdir -p $packagesdirectory $rootdirectory $modules
+if [ `uname -m` == "x86_64" ]; then
+	slapt-get -i --reinstall -d kernel-headers kernel-huge kernel-modules
+else
+	slapt-get -i --reinstall -d kernel-huge kernel-huge-smp kernel-modules kernel-modules-smp
+fi 
+
+if [ `uname -m` == "x86_64" ]; then
+	cp /var/slapt-get/slackware64/a/* $packagesdirectory
+	cp /var/slapt-get/slackware64/d/* $packagesdirectory
+else
+	cp /var/slapt-get/slackware/a/* $packagesdirectory
+	cp /var/slapt-get/slackware/d/* $packagesdirectory
+fi	
 
 # install packages in $rootdirectory
 echo "install packages in $rootdirectory"
@@ -89,23 +113,39 @@ build-slackware-live.sh --module $rootdirectory $modules 05-kernel.slm  -xz
 echo
 echo "==================================="
 echo "build initrd image + efi"
-build-slackware-live.sh --init / $modules $moduleslist
-
+if [ `uname -m` != "x86_64" ]; then
+		kv=`ls -l /boot/vmlinuz | cut -f2 -d'>' | sed s/^[^0-9]*//`
+		kvnp=`echo ${kv: 0:-4}`
+		(
+			cd /boot
+			ln -sf vmlinuz-huge-${kvnp} vmlinuz
+		)
+		build-slackware-live.sh --init / $modules $moduleslist
+		mv $modules/boot/initrd.gz $modules/boot/nosmp.gz
+		mv $modules/boot/vmlinuz $modules/boot/vmlinuznp
+		(
+			cd $modules/boot
+			ln -sf /boot/vmlinuz-huge-smp-$kv /boot/vmlinuz
+		)
+fi		
+	build-slackware-live.sh --init / $modules $moduleslist
 # copy files to usb
 echo
 echo "==================================="
 echo "copy $modules to $usb_path"
 cp -R $modules/* $usb_path
 #cp modules/boot/modules/05-kernel.slm /run/media/djemos/LIVE/boot/modules/05-kernel.slm
-dialog --title "Delete $rootdirectory and $modules directories ?" \
-	--defaultno \
-	--yesno "$MSG" 0 0
-retval=$?
-if [ $retval -eq 1 ] || [ $retval -eq 255 ]; then
-	exit 0
-else
+
+#dialog --title "Delete $rootdirectory and $modules directories ?" \
+#	--defaultno \
+#	--yesno "$MSG" 0 0
+#retval=$?
+#if [ $retval -eq 1 ] || [ $retval -eq 255 ]; then
+#	exit 0
+#else
 	echo
 	echo "==================================="
-	echo "delete $rootdirectory $modules directories"
-	rm -rf $rootdirectory $modules
-fi
+	echo "delete $rootdirectory $modules"
+	echo "$packagesdirectory $packageslistfile"
+	rm -rf $rootdirectory $modules $packagesdirectory $packageslistfile
+#fi
