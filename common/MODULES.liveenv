@@ -2,8 +2,7 @@ root-password
 hostname
 ssh
 alias
-avahi
-gdm
+lightdm
 user-settings-xfce
 dmrc-xfce
 xscreensaver-disable
