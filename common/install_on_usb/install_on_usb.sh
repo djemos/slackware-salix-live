@@ -1,15 +1,37 @@
 #!/bin/bash
 # Gettext internationalization
+#
+# Copyright 2016, 2022  Dimitris Tzemos, GR
+# All rights reserved.
+#
+# Redistribution and use of this script, with or without modification, is
+# permitted provided that the following conditions are met:
+#
+# 1. Redistributions of this script must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
+#  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#  MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO
+#  EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#  SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+#  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+#  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+#  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+#  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# "BASED ON CODE OF BUILD_SLACKWARE-LIVE.SH FROM linux-nomad"
+# Eric Hameleers <alien@slackware.com> (encryption support)
 
-#"BASED ON CODE OF BUILD_SLACKWARE-LIVE.SH FROM linux-nomad"
 AUTHOR='Dimitris Tzemos - dijemos@gmail.com'
 LICENCE='GPL v3+'
 SCRIPT=$(basename "$0")
 SCRIPT=$(readlink -f "$SCRIPT")
-VER=1.0
+VER=2.0
 
 version() {
-  echo "Salix USB installer and persistent creator for 32 and EFI/UEFI 64 v$VER"
+  echo "Live USB installer and persistent creator for 32 and EFI/UEFI 64 v$VER"
   echo " by $AUTHOR"
   echo "Licence: $LICENCE"
 }
@@ -27,7 +49,7 @@ usage() {
   echo ''
   echo '-> --persistent option creates a persistent ext3 file after installation, if user did not do so then'
   echo '-> specify architecture and device'
-  echo '-> No need to specify path to iso because Salix Live is already installed'
+  echo '-> No need to specify path to iso because Slackel Live is already installed'
   exit 1
 }
 
@@ -51,8 +73,10 @@ FORMATERROR=3
 BOOTERROR=4
 INSUFFICIENTSPACE=5
 persistent_file=""
+ENCRYPT=""
 SCRIPT_NAME="$(basename $0)"
 NAME="persistent"
+ENCRYPT=""
 SVER=14.2
 
 function check_root(){
@@ -65,23 +89,19 @@ if [ `id -u` != "0" ]; then
 fi
 }
 
-
-function create_link_for_other_distros(){
-# if we run the script from other distro's e.g. ubuntu 
-# which have mbr.bin installed in /usr/lib/syslinux/ 
-# we need a symbolic to /usr/share/syslinux
-if [ ! -f /etc/slackware-version ]; then
-	if [ -f /usr/lib/syslinux/mbr.bin ]; then
-	 if [ ! -f /usr/share/syslinux/mbr.bin ]; then
-		sudo ln --symbolic /usr/lib/syslinux/mbr.bin  /usr/share/syslinux/mbr.bin
-	 fi 
-	fi
-	
-	if [ -f /usr/lib/syslinux/gptmbr.bin ]; then
-	 if [ ! -f /usr/share/syslinux/gptmbr.bin ]; then
-		sudo ln --symbolic /usr/lib/syslinux/gptmbr.bin  /usr/share/syslinux/gptmbr.bin
-	 fi 
-	fi 
+function find_syslinux(){
+# we need the path to syslinux files to be able to use the script 
+# from other distro's e.g. ubuntu
+if [ -d /usr/share/syslinux ]; then
+  PATH_TO_SYSLINUX="/usr/share/syslinux"
+elif [ -d /usr/lib/SYSLINUX ]; then
+  PATH_TO_SYSLINUX="/usr/lib/SYSLINUX"
+elif [ -d /usr/lib/syslinux ]; then
+    if [ -f /usr/lib/syslinux/mbr.bin ]; then
+		PATH_TO_SYSLINUX="/usr/lib/syslinux"
+	elif [ -f /usr/lib/syslinux/mbr/mbr.bin ]; then
+		PATH_TO_SYSLINUX="/usr/lib/syslinux/mbr"
+	fi	
 fi
 }	
 
@@ -108,9 +128,9 @@ if [ -f "$isoname" ]; then
 	isonamef="${isoname##*/}"
 	isonamef="${isonamef%%-*}"
 
-	if [ "$isonamef" == "salixlive64" ]; then
+	if [ "$isonamef" == "slackellive64" ] || [ "$isonamef" == "salixlive64" ]; then
 		iso_arch=64
-	elif [ "$isonamef" == "salixlive" ]; then
+	elif [ "$isonamef" == "slackellive" ] || [ "$isonamef" == "salixlive" ]; then
 		iso_arch=32
 	else
 		echo "You provide the wrong iso image"
@@ -203,6 +223,9 @@ function persistent_message(){
 MSG="Do you want to create a persistent file on your drive $installmedia ?\n\
 \n\
 "
+MSG_ENCRYPT="Do you want to encrypt the persistent file ?\n\
+\n\
+"
 	
 dialog --title "Create a Persistent file" \
 	--defaultno \
@@ -235,7 +258,16 @@ else
 		persistent_file="no"
 	else
 		SIZE=$answer
-	fi  
+		dialog --title "Encrypt the persistent file" \
+	--defaultno \
+	--yesno "$MSG_ENCRYPT" 0 0
+	retval=$?
+		if [ $retval -eq 1 ] || [ $retval -eq 255 ]; then
+			ENCRYPT="no"
+		else	
+			ENCRYPT="yes"
+		fi
+	fi
 fi
 }
     
@@ -243,7 +275,10 @@ function persistent_message_ext3(){
 MSG="Do you want to create a persistent file on your drive $installmedia ?\n\
 \n\
 "
-	
+MSG_ENCRYPT="Do you want to encrypt the persistent file ?\n\
+\n\
+"
+
 dialog --title "Create a Persistent file" \
 	--defaultno \
 	--yesno "$MSG" 0 0
@@ -285,7 +320,16 @@ else
 		persistent_file="no"
 	else
 		SIZE=$answer
-	fi  
+	dialog --title "Encrypt the persistent file" \
+	--defaultno \
+	--yesno "$MSG_ENCRYPT" 0 0
+	retval=$?
+		if [ $retval -eq 1 ] || [ $retval -eq 255 ]; then
+			ENCRYPT="no"
+		else	
+			ENCRYPT="yes"
+		fi	
+	fi 
 fi
 }
 
@@ -300,12 +344,51 @@ if [ $AFTER -gt 0 ]; then
 	echo ""
 	echo "Creating persistent file 'persistent'. Please wait ..."
 	echo ""
-		if [ "$LIVEFSTYPE" == "fixed" ]; then
-			dd if=/dev/zero of="$NAME" bs=1M count=$SIZE
-		else	
-			dd if=/dev/zero of="$NAME" bs=1M count=0 seek=$SIZE
+		#if [ "$LIVEFSTYPE" == "fixed" ]; then
+		#	dd if=/dev/zero of="$NAME" bs=1M count=$SIZE
+		#else	
+		#	dd if=/dev/zero of="$NAME" bs=1M count=0 seek=$SIZE
+		#fi
+		#mkfs.ext3 -F -m 0 -L "persistent" "$NAME" && CHECK='OK'
+		
+		# Create a sparse file (not allocating any space yet):
+		dd of=${NAME} bs=1M count=0 seek=$SIZE
+		# Setup a loopback device that we can use with cryptsetup:
+		LODEV=$(losetup -f)
+		losetup $LODEV ${NAME}
+        if [ "${ENCRYPT}" = "yes" ]; then
+			# Format the loop device with LUKS:
+			echo "--- Encrypting the container file with LUKS; enter 'YES' and a passphrase..."
+			until cryptsetup -y luksFormat $LODEV ; do
+				echo ">>> Did you type two different passphrases?"
+				read -p ">>> Press [ENTER] to try again or Ctrl-C to abort ..." REPLY 
+			done
+			# Unlock the LUKS encrypted container:
+			echo "--- Unlocking the LUKS container requires your passphrase again..."
+			until cryptsetup luksOpen $LODEV $(basename ${NAME}) ; do
+				echo ">>> Did you type an incorrect passphrases?"
+				read -p ">>> Press [ENTER] to try again or Ctrl-C to abort ..." REPLY 
+			done
+			CNTDEV=/dev/mapper/$(basename ${NAME})
+			# Now we allocate blocks for the LUKS device. We write encrypted zeroes,
+			# so that the file looks randomly filled from the outside.
+			# Take care not to write more bytes than the internal size of the container:
+			CNTIS=$(( $(lsblk -b -n -o SIZE  $(readlink -f ${CNTDEV})) / 512))
+			dd if=/dev/zero of=${CNTDEV} bs=512 count=${CNTIS} || true
+		else
+			CNTDEV=$LODEV
+			# Un-encrypted container files remain sparse.
 		fi
-		mkfs.ext3 -F -m 0 -L "persistent" "$NAME" && CHECK='OK'
+		# Format the now available block device with a linux fs:
+		mkfs.ext4 ${CNTDEV} && CHECK='OK'
+		# Tune the ext4 filesystem:
+		tune2fs -m 0 -c 0 -i 0 ${CNTDEV}
+		# Don't forget to clean up after ourselves:
+		if [ "${ENCRYPT}" = "yes" ]; then
+			cryptsetup luksClose $(basename ${NAME})
+		fi
+		losetup -d ${LODEV} || true
+		
 	if [ -n "$CHECK" ]; then
 		echo ""
 		echo "The persistent file $NAME is ready."
@@ -514,7 +597,7 @@ echo ""
 			# Use syslinux to make the USB device bootable:
 			echo "--- Making the USB drive '$installdevice' bootable using syslinux..."
 			syslinux -d /boot/syslinux $installmedia || return $BOOTERROR
-			cat /usr/share/syslinux/mbr.bin > $installdevice
+			cat ${PATH_TO_SYSLINUX}/mbr.bin > $installdevice
 		else #ext3
 			#mv /mnt/install/boot/syslinux /mnt/install/boot/extlinux
 			#mv /mnt/install/boot/extlinux/syslinux.cfg /mnt/install/boot/extlinux/extlinux.conf
@@ -526,9 +609,9 @@ echo ""
 			extlinux -i /mnt/install/boot/syslinux || return $BOOTERROR
 			umount /mnt/install
 			if fdisk -l $installdevice 2>/dev/null | grep -q 'GPT\|gpt'; then
-				cat /usr/share/syslinux/gptmbr.bin > $installdevice
+				cat ${PATH_TO_SYSLINUX}/gptmbr.bin > $installdevice
 			else
-				cat /usr/share/syslinux/mbr.bin > $installdevice
+				cat ${PATH_TO_SYSLINUX}/mbr.bin > $installdevice
 			fi
 		fi
 	else
@@ -559,9 +642,12 @@ if  check_if_file_iso_exists $isoname ; then
 	check_device $installmedia
 	#find_usb
 	usb_message
-	create_link_for_other_distros
+	find_syslinux
 	ISODIR=$(mktemp -d)
-	mount -o loop $isoname $ISODIR > /dev/null 2>&1
+	LODEVISO=$(losetup -f)
+	losetup $LODEVISO $isoname
+	mount $LODEVISO $ISODIR > /dev/null 2>&1
+	#mount -o loop $isoname $ISODIR > /dev/null 2>&1
 	livedirectory=$ISODIR
     if [ -f "$isoname" ] && [ -b "$installmedia" ]; then
 		livesystemsize=`du -s -m $livedirectory | sed 's/\t.*//'`
@@ -574,25 +660,28 @@ if  check_if_file_iso_exists $isoname ; then
 			echo "error: insufficant space on device '$installmedia'"
 			umount $ISODIR
 			rmdir $ISODIR
+			losetup -d $LODEVISO || true
 			exit $INSUFFICIENTSPACE
 		else
 			filesystem_message
 			if [ "$LIVEFS" == "vfat" ]; then
-				persistent_file_type
+				#persistent_file_type
 				persistent_message
 			else
-				persistent_file_type
+				#persistent_file_type
 				persistent_message_ext3
 			fi
 			install_usb $livedirectory $installmedia
+			losetup -d $LODEVISO || true
 			if [ "$persistent_file" == "yes" ]; then
 			 create_persistent
-			fi
+			fi	
 			exit $!
 		fi
 	else
 		umount $ISODIR
 		rmdir $ISODIR
+		losetup -d $LODEVISO || true
 		echo "`basename $0` --usb iso_name device"
 		exit $CMDERROR
 	fi
@@ -621,13 +710,13 @@ if  [ "$iso_arch" == "32" ] || [ "$iso_arch" == "64" ]; then
 		    umount /mnt/tmp
 		    partitionnumber=2
 			installmedia="$installdevice$partitionnumber"
-			persistent_file_type
+			#persistent_file_type
 			echo $installmedia
 			persistent_message_ext3
 		else	
 			partitionnumber=1
 			installmedia="$installdevice$partitionnumber"
-			persistent_file_type
+			#persistent_file_type
 			echo $installmedia			
 			persistent_message
 		fi
@@ -635,7 +724,7 @@ if  [ "$iso_arch" == "32" ] || [ "$iso_arch" == "64" ]; then
 			partitionnumber=1
 			installmedia="$installdevice$partitionnumber"
 		if mount $installmedia /mnt/tmp >/dev/null 2>&1; then
-			persistent_file_type
+			#persistent_file_type
 			echo $installmedia
 			if mount | grep -q "^$installmedia .* vfat "; then
 			    persistent_message
