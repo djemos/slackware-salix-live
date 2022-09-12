@@ -49,7 +49,7 @@ usage() {
   echo ''
   echo '-> --persistent option creates a persistent ext3 file after installation, if user did not do so then'
   echo '-> specify architecture and device'
-  echo '-> No need to specify path to iso because Slackel Live is already installed'
+  echo '-> No need to specify path to iso because Live iso is already installed'
   exit 1
 }
 
